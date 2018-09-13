@@ -29,21 +29,19 @@ public class TextFinder {
     private static boolean checkText(File entry, String text) throws IOException {
         int mapsize = 4 * 1024 * 1024;
         final byte[] tosearch = text.getBytes("Cp1251");
-        int padding = 1;
         try (FileChannel channel = FileChannel.open(entry.toPath(),StandardOpenOption.READ)) {
             final long length = channel.size();
             int pos = 0;
             while (pos < length) {
                 long remaining = length - pos;
 
-                int trymap = mapsize + tosearch.length + padding;
+                int trymap = mapsize + tosearch.length;
                 int tomap = (int) Math.min(trymap, remaining);
 
                 int limit = trymap == tomap ? mapsize : (tomap - tosearch.length);
                 MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, pos, tomap);
                 pos += (trymap == tomap) ? mapsize : tomap;
                 for (int i = 0; i < limit; i++) {
-                    final byte b = buffer.get(i);
                     if (wordMatch(buffer, i, tosearch)) {
                         return true;
                     }
@@ -53,9 +51,16 @@ public class TextFinder {
         }
     }
 
-    private static boolean wordMatch(MappedByteBuffer buffer, int pos, byte[] tosearch) {
-        for (int i = 0; i < tosearch.length; i++) {
-            if (tosearch[i] != buffer.get(pos + i)) {
+    private static boolean wordMatch(MappedByteBuffer buffer, int pos, byte[] tosearch) throws IOException {
+        byte end = 13;
+        int error = 0;
+        for (int i = 0; i < tosearch.length; ++i) {
+            if (buffer.get(pos + i + error) == end) {
+                ++i;
+                ++error;
+            }
+            if (i == tosearch.length) break;
+            if (tosearch[i] != buffer.get(pos + i + error)) {
                 return false;
             }
         }
