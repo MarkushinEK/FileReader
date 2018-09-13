@@ -27,18 +27,18 @@ public class TextFinder {
     }
 
     private static boolean checkText(File entry, String text) throws IOException {
-        int mapsize = 4 * 1024 * 1024;
+        long mapsize = 4 * 1024 * 1024;
         final byte[] tosearch = text.getBytes("Cp1251");
         try (FileChannel channel = FileChannel.open(entry.toPath(),StandardOpenOption.READ)) {
             final long length = channel.size();
-            int pos = 0;
+            long pos = 0;
             while (pos < length) {
                 long remaining = length - pos;
 
-                int trymap = mapsize + tosearch.length;
-                int tomap = (int) Math.min(trymap, remaining);
+                long trymap = mapsize + tosearch.length;
+                long tomap = Math.min(trymap, remaining);
 
-                int limit = trymap == tomap ? mapsize : (tomap - tosearch.length);
+                long limit = trymap == tomap ? mapsize : (tomap - tosearch.length);
                 MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, pos, tomap);
                 pos += (trymap == tomap) ? mapsize : tomap;
                 for (int i = 0; i < limit; i++) {
