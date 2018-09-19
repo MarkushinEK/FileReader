@@ -38,7 +38,7 @@ public class TextFinder {
                 long trymap = mapsize + tosearch.length;
                 long tomap = Math.min(trymap, remaining);
 
-                long limit = trymap == tomap ? mapsize : (tomap - tosearch.length);
+                long limit = trymap == tomap ? mapsize : (tomap - tosearch.length + 1);
                 MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, pos, tomap);
                 pos += (trymap == tomap) ? mapsize : tomap;
                 for (int i = 0; i < limit; i++) {
